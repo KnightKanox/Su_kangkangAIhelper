@@ -52,6 +52,7 @@ private val QUESTIONS = listOf(
     "您平时出汗情况怎么样？",
     "您平时口干吗？",
     "您大便通常是什么情况？",
+    "您的年龄段是？",
     "您有什么饮食偏好吗？（可留空，留空按「无」处理）",
     "您有什么忌口的食物吗？（可留空，留空按「无」处理）"
 )
@@ -61,6 +62,7 @@ private val OPTIONS = listOf(
     listOf("容易出汗", "很少出汗", "正常", "晚上睡觉出汗"),
     listOf("经常口干", "很少口干", "正常", "口苦"),
     listOf("偏软不成形", "偏干硬", "正常", "时干时稀"),
+    listOf("60岁以下", "60—69岁", "70—79岁", "80岁及以上"),
     emptyList(),
     emptyList()
 )
@@ -77,7 +79,8 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
                 onAnswer = vm::setAnswer,
                 onNext = vm::nextQuestion,
                 onPrevious = vm::previousQuestion,
-                onFinish = vm::finishQuestionnaire
+                onFinish = vm::finishQuestionnaire,
+                onRefill = vm::refill
             )
             Screen.SUMMARY -> SummaryScreen(
                 state = state,
@@ -86,7 +89,8 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
             )
             Screen.RECOMMEND -> RecommendScreen(
                 state = state,
-                onSelectTerm = vm::selectTerm
+                onSelectTerm = vm::selectTerm,
+                onRefill = vm::refill
             )
         }
     }
@@ -132,7 +136,8 @@ private fun QuestionnaireScreen(
     onAnswer: (Int, String) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    onRefill: () -> Unit
 ) {
     val idx = state.currentQuestion
 
@@ -143,7 +148,7 @@ private fun QuestionnaireScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = "第 ${idx + 1} / 6 题",
+            text = "第 ${idx + 1} / ${QUESTIONS.size} 题",
             fontSize = 18.sp,
             color = MaterialTheme.colorScheme.primary
         )
@@ -156,7 +161,7 @@ private fun QuestionnaireScreen(
         )
         Spacer(Modifier.height(24.dp))
 
-        if (idx < 4) {
+        if (OPTIONS[idx].isNotEmpty()) {
             val selected = selectedAnswer(state, idx)
             OPTIONS[idx].forEach { option ->
                 val isSelected = selected == option
@@ -175,7 +180,7 @@ private fun QuestionnaireScreen(
                 Spacer(Modifier.height(12.dp))
             }
         } else {
-            val value = if (idx == 4) state.q5 else state.q6
+            val value = selectedAnswer(state, idx)
             OutlinedTextField(
                 value = value,
                 onValueChange = { onAnswer(idx, it) },
@@ -199,16 +204,20 @@ private fun QuestionnaireScreen(
                 }
                 Spacer(Modifier.width(12.dp))
             }
-            val canNext = idx >= 4 || selectedAnswer(state, idx).isNotEmpty()
+            val canNext = OPTIONS[idx].isEmpty() || selectedAnswer(state, idx).isNotEmpty()
             Button(
-                onClick = { if (idx == 5) onFinish() else onNext() },
+                onClick = { if (idx == QUESTIONS.lastIndex) onFinish() else onNext() },
                 enabled = canNext,
                 modifier = Modifier
                     .weight(1f)
                     .height(60.dp)
             ) {
-                Text(if (idx == 5) "完成" else "下一题", fontSize = 20.sp)
+                Text(if (idx == QUESTIONS.lastIndex) "完成" else "下一题", fontSize = 20.sp)
             }
+        }
+        Spacer(Modifier.height(20.dp))
+        OutlinedButton(onClick = onRefill, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+            Text("重新开始问卷", fontSize = 18.sp)
         }
     }
 }
@@ -219,7 +228,8 @@ private fun selectedAnswer(state: AppUiState, idx: Int): String = when (idx) {
     2 -> state.q3
     3 -> state.q4
     4 -> state.q5
-    else -> state.q6
+    5 -> state.q6
+    else -> state.q7
 }
 
 @Composable
@@ -260,11 +270,7 @@ private fun SummaryScreen(
                         Text("正在生成您的健康画像摘要…", fontSize = 18.sp)
                     }
                 } else {
-                    Text(
-                        text = state.summary.ifBlank { "摘要生成失败，请重新填写后重试。" },
-                        fontSize = 20.sp,
-                        lineHeight = 32.sp
-                    )
+                    MarkdownText(state.summary.ifBlank { "摘要生成失败，请重新填写后重试。" })
                 }
             }
         }
@@ -277,7 +283,7 @@ private fun SummaryScreen(
                     .weight(1f)
                     .height(60.dp)
             ) {
-                Text("重新填写", fontSize = 20.sp)
+                Text("重新开始问卷", fontSize = 18.sp)
             }
             Spacer(Modifier.width(12.dp))
             Button(
@@ -297,7 +303,8 @@ private fun SummaryScreen(
 @Composable
 private fun RecommendScreen(
     state: AppUiState,
-    onSelectTerm: (String) -> Unit
+    onSelectTerm: (String) -> Unit,
+    onRefill: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -368,13 +375,13 @@ private fun RecommendScreen(
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = state.recommendationText.ifBlank { "暂无可推荐的菜谱。" },
-                        fontSize = 20.sp,
-                        lineHeight = 32.sp
-                    )
+                    MarkdownText(state.recommendationText.ifBlank { "暂无可推荐的菜谱。" })
                 }
             }
+        }
+        Spacer(Modifier.height(24.dp))
+        OutlinedButton(onClick = onRefill, modifier = Modifier.fillMaxWidth().height(60.dp)) {
+            Text("重新开始问卷", fontSize = 20.sp)
         }
     }
 }
