@@ -1,0 +1,17 @@
+.env
+.env.*
+*.log
+*.py[cod]
+__pycache__/
+.venv/
+windows-app/build/
+windows-app/build-fixed/
+windows-app/dist/
+windows-app/dist-fixed/
+windows-app/*.spec
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+*.apk
+*.exe

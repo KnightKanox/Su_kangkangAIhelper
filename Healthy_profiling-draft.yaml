@@ -1,0 +1,1299 @@
+schema_version: 1.0.0
+name: Healthy_profiling
+id: 7666310500133765163
+description: "通过5道问题采集用户体质信息，生成健康画像\n"
+mode: chatflow
+icon: plugin_icon/workflow.png
+nodes:
+    - id: "100001"
+      type: start
+      title: 开始
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Start-v2.jpg
+      description: "工作流的起始节点，用于设定启动工作流需要的信息"
+      position:
+        x: 180
+        y: 117.35
+      parameters:
+        node_outputs:
+            CONVERSATION_NAME:
+                type: string
+                value: null
+                default_value: Default
+                description: 本次请求绑定的会话，会自动写入消息、会从该会话读对话历史。
+            USER_INPUT:
+                type: string
+                value: null
+    - id: "900001"
+      type: end
+      title: 结束
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-End-v2.jpg
+      description: "工作流的最终节点，用于返回工作流运行后的结果信息"
+      position:
+        x: 3921.176034287955
+        y: 314.33066836493987
+      parameters:
+        content:
+            type: string
+            value:
+                content: '{{output}}'
+                type: literal
+        node_inputs:
+            - name: output
+              input:
+                type: string
+                value:
+                    path: output
+                    ref_node: "106420"
+        streamingOutput: true
+        terminatePlan: useAnswerContent
+    - id: "182832"
+      type: llm
+      title: 问候
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-LLM-v2.jpg
+      description: "调用大语言模型,使用变量和提示词生成回复"
+      version: "3"
+      position:
+        x: 1502.3590412699334
+        y: 507.8924619608862
+      parameters:
+        fcParamVar:
+            knowledgeFCParam: {}
+        llmParam:
+            - name: apiMode
+              input:
+                type: integer
+                value: "0"
+            - name: temperature
+              input:
+                type: float
+                value: "0.5"
+            - name: topP
+              input:
+                type: float
+                value: "1"
+            - name: frequencyPenalty
+              input:
+                type: float
+                value: "0"
+            - name: maxTokens
+              input:
+                type: integer
+                value: "4096"
+            - name: spCurrentTime
+              input:
+                type: boolean
+                value: false
+            - name: spAntiLeak
+              input:
+                type: boolean
+                value: false
+            - name: thinkingType
+              input:
+                type: string
+                value: enabled
+            - name: responseFormat
+              input:
+                type: integer
+                value: "2"
+            - name: modelName
+              input:
+                type: string
+                value: 豆包·2.0·mini·260428
+            - name: modelType
+              input:
+                type: integer
+                value: "963313347"
+            - name: generationDiversity
+              input:
+                type: string
+                value: balance
+            - name: parameters
+              input:
+                type: object
+                properties:
+                    max_completion_tokens:
+                        type: integer
+                        value: "0"
+                    reasoning_effort:
+                        type: string
+                        value: medium
+                value: null
+            - name: prompt
+              input:
+                type: string
+                value: 生成一段简短开场白，告诉用户你是康康食养AI，会问几个问题了解他的身体状况，之后每个节气可以推荐适合的菜谱。语气亲切温暖。
+            - name: enableChatHistory
+              input:
+                type: boolean
+                value: true
+            - name: chatHistoryRound
+              input:
+                type: integer
+                value: "3"
+            - name: systemPrompt
+              input:
+                type: string
+                value: "## 角色定义\n你是“康康食养AI”，一个为广州市海珠区社区老人提供食养建议的智能助手。\n你的知识来源：\n- 中医经典食养理论（《黄帝内经》《金匮要略》等，参考 CMLM-ZhongJing/HuangDI 的知识体系）\n- 24 节气岭南食养知识库（你的权威来源，菜谱推荐必须从此库检索）\n- 现代营养学基础\n-《中医体质分类与判定》\n\n硬性规则，必须严格执行，不可擅自更改：\n1. 依据{{lauguage_type}}选择输出文案，{{lauguage_type}}=普通话，只能输出普通话版本；{{lauguage_type}}=粤语，只能输出粤语版本。\n2. 禁止混杂两种语言，禁止私自改写句式。\n3. 只输出最终问候文本，不要任何解释、备注、标点以外多余内容。\n\n【普通话版本固定文案】\n您好！欢迎使用康康食养AI，我是你的社区营养助手。接下来我会问你几个简单问题，了解你的身体状况，之后结合节气为你推荐合适的膳食。我们现在开始啦！\n\n【粤语版本固定文案】\n早晨！我系康康食养AI，系你嘅社区营养助手。等我了解下你嘅身体状况，之后每个节气都可以帮你拣最适合你嘅菜式。唔使担心，我只会问你几条简单问题，我哋开始啦！\n\n语种标识：{{lauguage_type}}\n用户输入：{{USER_INPUT}}\n## 安全边界\n- 不提供医疗诊断、用药建议\n- 不评价用户正在服用的药物\n- 不推荐极端饮食方案（如断食、单一食材疗法）\n- 遇到紧急健康问题（如“头晕眼花、心口痛”）→ 提醒立即就医\n- 所有推荐附带：“本推荐为食养参考，不构成医疗建议”\n \n## 粤语/普通话切换规则\n- 用户输入为粤语口语文本 → 全程粤语回复\n- 用户输入为普通话文本 → 全程普通话回复\n- 用户明确说“用粤语/普通话” → 切换并确认\n- 不确定时默认用普通话，并附加一句：“需要我用粤语讲多次吗？”\n 前置硬性规则：自动识别用户上一句输入的语言，用户输入为粤语，则你所有的提问、回复、引导话术全部使用地道广东日常粤语；用户输入普通话，则全程使用普通话。该规则优先于所有业务逻辑，所有交互话术语种必须和用户保持一致。\n用户输入内容：{{USER_INPUT}}\n对话上下文\n并且根据用户上一句输入生成对应语种的问句（粤语/普通话）\n回答用户\n用户输入：{{USER_INPUT}}\n"
+            - name: stableSystemPrompt
+              input:
+                type: string
+                value: ""
+            - name: canContinue
+              input:
+                type: boolean
+                value: false
+            - name: loopPromptVersion
+              input:
+                type: string
+                value: ""
+            - name: loopPromptName
+              input:
+                type: string
+                value: ""
+            - name: loopPromptId
+              input:
+                type: string
+                value: ""
+        node_inputs:
+            - name: USER_INPUT
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+        node_outputs:
+            output:
+                type: string
+                value: null
+            reasoning_content:
+                type: string
+                value: null
+        settingOnError:
+            processType: 1
+            retryTimes: 0
+            switch: false
+            timeoutMs: 180000
+    - id: "106420"
+      type: subflow
+      title: Seasonal_Recipe_Recommendation
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Workflow-v2.jpg
+      description: "根据用户体质和当前节气，通过知识库检索 + 代码过滤排序 + LLM 生成，推荐 3 道适合的时令菜谱。由工作流 1（Health Profile Collection）调用触发。"
+      position:
+        x: 3189.5361684812506
+        y: 321.9383173788939
+      parameters:
+        inputDefs:
+            - input: {}
+              name: USER_INPUT
+              required: false
+              type: string
+            - defaultValue: Default
+              description: 本次请求绑定的会话，会自动写入消息、会从该会话读对话历史。
+              input: {}
+              name: CONVERSATION_NAME
+              required: false
+              type: string
+            - input: {}
+              name: user_physique
+              required: true
+              type: string
+            - input: {}
+              name: user_preferences
+              required: true
+              type: string
+            - input: {}
+              name: user_taboos
+              required: true
+              type: string
+        node_inputs:
+            - name: user_physique
+              input:
+                type: string
+                value:
+                    path: constitution_type_list
+                    ref_node: "153470"
+            - name: user_preferences
+              input:
+                type: string
+                value:
+                    path: user_taste_prefer_list
+                    ref_node: "153470"
+            - name: user_taboos
+              input:
+                type: string
+                value:
+                    path: user_avoid_food_list
+                    ref_node: "153470"
+            - name: CONVERSATION_NAME
+              input:
+                type: string
+                value: "Default"
+            - name: USER_INPUT
+              input:
+                value:
+                    path: USER_INPUT
+                    ref_node: "100001"
+        node_outputs:
+            output:
+                type: string
+                value: null
+        settingOnError: {}
+        spaceId: "7666032956049817606"
+        type: 1
+        workflowId: "7666385885823516682"
+        workflowVersion: v0.0.47
+    - id: "153470"
+      type: loop
+      title: 循环1
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Loop-v2.jpg
+      description: "用于通过设定循环次数和逻辑，重复执行一系列任务"
+      position:
+        x: 2735.611559991767
+        y: 396.59246196088617
+      canvas_position:
+        x: 1369.4296564010674
+        y: 800.9700412940863
+      parameters:
+        loopCount:
+            type: integer
+            value:
+                content: 10
+                rawMeta:
+                    type: 2
+                type: literal
+        loopType: infinite
+        node_outputs:
+            constitution_type_list:
+                value:
+                    type: list
+                    items:
+                        type: string
+                        value: null
+                    value:
+                        path: constitution_type
+                        ref_node: "1358364"
+            output:
+                value:
+                    type: list
+                    items:
+                        type: string
+                        value: null
+                    value:
+                        path: output
+                        ref_node: "1062107"
+            user_avoid_food_list:
+                value:
+                    type: list
+                    items:
+                        type: string
+                        value: null
+                    value:
+                        path: user_dislike
+                        ref_node: "1024747"
+            user_taste_prefer_list:
+                value:
+                    type: list
+                    items:
+                        type: string
+                        value: null
+                    value:
+                        path: user_taste_prefer
+                        ref_node: "1041721"
+        variableParameters: []
+      nodes:
+        - id: "1870085"
+          type: question
+          title: 你平时怕冷还是怕热？_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 0
+            y: 100
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 3
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 4096
+                modelName: 豆包·2.0·mini·260428
+                modelType: 9.63313347e+08
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: object
+                    properties:
+                        options:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        value: null
+                                value: null
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                    value: null
+                cold_hot:
+                    type: string
+                    required: true
+                    value: null
+            option_type: static
+            options:
+                - name: 怕冷
+                - name: 怕热
+                - name: 正常
+                - name: 冷热都怕
+            question: 您平时怕冷还是怕热呢?（请回答：怕冷/怕热/正常/冷热都怕）
+        - id: "1781173"
+          type: question
+          title: Q3：容易出汗吗？_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 960.389250956876
+            y: 74
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 3
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 4096
+                modelName: 豆包·2.0·mini·260428
+                modelType: 9.63313347e+08
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: object
+                    properties:
+                        options:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        value: null
+                                value: null
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                    value: null
+                chuhan:
+                    type: string
+                    value: null
+            option_type: static
+            options:
+                - name: 容易出汗
+                - name: 很少出汗
+                - name: 正常
+                - name: 晚上睡觉出汗
+            question: 您容易出汗吗？（请回答：容易出汗/很少出汗/正常/晚上睡觉出汗）
+        - id: "1482353"
+          type: question
+          title: Q4：平时口干吗？_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 20.561033069568794
+            y: 421.4303443415304
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 3
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 4096
+                modelName: 豆包·2.0·mini·260428
+                modelType: 9.63313347e+08
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: object
+                    properties:
+                        options:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        value: null
+                                value: null
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                    value: null
+                kougan:
+                    type: string
+                    required: true
+                    value: null
+            option_type: static
+            options:
+                - name: 经常口干
+                - name: 很少口干
+                - name: 正常
+                - name: 口苦
+            question: 您平时口干吗？（请回答：常口干/很少口干/正常/口苦）
+        - id: "1522434"
+          type: question
+          title: Q5：大便通常是什么情况？_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 453.0095740304041
+            y: 452.3597550735069
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 3
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 4096
+                modelName: 豆包·2.0·mini·260428
+                modelType: 9.63313347e+08
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: object
+                    properties:
+                        options:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        value: null
+                                value: null
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                    value: null
+                dabian:
+                    type: string
+                    required: true
+                    value: null
+            option_type: static
+            options:
+                - name: 偏软不成形
+                - name: 偏干硬
+                - name: 正常
+                - name: 时干时稀
+            question: 您平时大便是什么情况？（请回答：偏软不成形/偏干硬/正常/时干时稀）
+        - id: "1358364"
+          type: code
+          title: 代码_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Code-v2.jpg
+          description: "编写代码，处理输入变量来生成返回值"
+          version: v2
+          position:
+            x: 940.0928107683449
+            y: 566.3639646135354
+          parameters:
+            code: |-
+                async def main(input):
+                    map_q1 = {
+                        "怕冷": "A",
+                        "怕热": "B",
+                        "正常": "C",
+                        "冷热都怕": "D"
+                    }
+                    map_q2 = {
+                        "容易出汗": "A",
+                        "很少出汗": "B",
+                        "正常": "C",
+                        "晚上睡觉出汗": "D"
+                    }
+                    map_q3 = {
+                        "经常口干": "A",
+                        "很少口干": "B",
+                        "正常": "C",
+                        "口苦": "D"
+                    }
+                    map_q4 = {
+                        "偏软不成形": "A",
+                        "偏干硬": "B",
+                        "正常": "C",
+                        "时干时稀": "D"
+                    }
+
+                    def text_to_opt(raw_text, mapping):
+                        if raw_text is None:
+                            return None
+                        s = str(raw_text).strip()
+                        if s in ["A", "B", "C", "D", "E"]:
+                            return s
+                        for txt, opt in mapping.items():
+                            if txt in s:
+                                return opt
+                        return None
+
+                    params = input.params
+                    raw_q1 = params.get("optionid1") or params.get("optionId1") or params.get("Q1") or params.get("q1")
+                    raw_q2 = params.get("optionid2") or params.get("optionId2") or params.get("Q2") or params.get("q2")
+                    raw_q3 = params.get("optionid3") or params.get("optionId3") or params.get("Q3") or params.get("q3")
+                    raw_q4 = params.get("optionid4") or params.get("optionId4") or params.get("Q4") or params.get("q4")
+
+                    q1 = text_to_opt(raw_q1, map_q1)
+                    q2 = text_to_opt(raw_q2, map_q2)
+                    q3 = text_to_opt(raw_q3, map_q3)
+                    q4 = text_to_opt(raw_q4, map_q4)
+
+                    if all(v is None for v in [q1, q2, q3, q4]):
+                        return {
+                            "constitution_type": "参数错误",
+                            "physique_desc": "未能识别答案文本，请确认传入的内容和问卷选项文字匹配"
+                        }
+
+                    scores = {
+                        "平和": 0, "气虚": 0, "阳虚": 0, "阴虚": 0,
+                        "痰湿": 0, "湿热": 0, "血瘀": 0, "气郁": 0, "特禀": 0
+                    }
+
+                    if q1 == "A":
+                        scores["阳虚"] += 5
+                    elif q1 == "B":
+                        scores["阴虚"] += 3
+                        scores["湿热"] += 2
+                    elif q1 == "C":
+                        scores["平和"] += 2
+                    elif q1 == "D":
+                        scores["气虚"] += 2
+                        scores["阳虚"] += 2
+
+                    if q2 == "A":
+                        scores["气虚"] += 4
+                        scores["阳虚"] += 2
+                    elif q2 == "B":
+                        scores["阳虚"] += 3
+                        scores["血瘀"] += 2
+                    elif q2 == "C":
+                        scores["平和"] += 2
+                    elif q2 == "D":
+                        scores["阴虚"] += 4
+
+                    if q3 == "A":
+                        if q1 == "A":
+                            scores["阳虚"] += 4
+                        else:
+                            scores["阴虚"] += 4
+                            scores["湿热"] += 2
+                    elif q3 == "B":
+                        scores["平和"] += 2
+                        scores["痰湿"] += 1
+                    elif q3 == "C":
+                        scores["平和"] += 2
+                    elif q3 == "D":
+                        scores["湿热"] += 3
+                        scores["气郁"] += 2
+
+                    if q4 == "A":
+                        scores["气虚"] += 2
+                        scores["阳虚"] += 2
+                        scores["痰湿"] += 3
+                    elif q4 == "B":
+                        scores["阴虚"] += 3
+                        scores["湿热"] += 1
+                    elif q4 == "C":
+                        scores["平和"] += 2
+                    elif q4 == "D":
+                        scores["气郁"] += 4
+                        scores["气虚"] += 2
+
+                    max_score = max(scores.values())
+                    top_list = [k for k, v in scores.items() if v == max_score]
+
+                    if max_score < 4:
+                        physique = "平和"
+                    else:
+                        if len(top_list) == 1:
+                            physique = top_list[0]
+                        else:
+                            priority = ["阳虚", "气郁", "气虚", "阴虚", "湿热", "痰湿", "血瘀", "特禀", "平和"]
+                            physique = top_list[0]
+                            for p in priority:
+                                if p in top_list:
+                                    physique = p
+                                    break
+
+                    desc_map = {
+                        "平和": "各方面比较均衡，跟着节气吃就好。",
+                        "气虚": "山药、莲子、红枣这类家常食材比较合适。",
+                        "阳虚": "生姜、核桃、羊肉这类温热的更合适，生冷的少吃一点。",
+                        "阴虚": "银耳、雪梨、鸭肉这类滋润的更合适，辛辣的少吃一点。",
+                        "痰湿": "冬瓜、薏米、陈皮这类更清爽，甜腻的少吃一点。",
+                        "湿热": "苦瓜、绿豆这类更清爽，油炸辛辣的少吃一点。",
+                        "血瘀": "山楂、黑木耳这类可以常吃，生冷的少吃一点。",
+                        "气郁": "陈皮、玫瑰花泡水比较合适。",
+                        "特禀": "发物类少吃一点，推荐时会先帮你筛一遍。"
+                    }
+                    physique_desc = desc_map.get(physique, "这方面信息还不完整，跟着节气吃就好。")
+
+                    return {
+                        "constitution_type": physique,
+                        "physique_desc": physique_desc
+                    }
+            language: 3
+            node_inputs:
+                - name: optionid4
+                  input:
+                    value:
+                        path: kougan
+                        ref_node: "1482353"
+                - name: optionid5
+                  input:
+                    value:
+                        path: dabian
+                        ref_node: "1522434"
+                - name: optionid3
+                  input:
+                    value:
+                        path: chuhan
+                        ref_node: "1781173"
+                - name: optionid1
+                  input:
+                    value:
+                        path: cold_hot
+                        ref_node: "1870085"
+            node_outputs:
+                constitution_type:
+                    type: string
+                    value: null
+            settingOnError:
+                processType: 1
+                retryTimes: 0
+                switch: false
+                timeoutMs: 60000
+        - id: "1041721"
+          type: question
+          title: 饮食偏好
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 1320.389250956876
+            y: 796.2713997241241
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 5
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 131072
+                modelName: 豆包·2.0·Code
+                modelType: 1.774430194e+09
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: list
+                    items:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                value: null
+                            content_type:
+                                type: string
+                                value: null
+                        value: null
+                    required: true
+                    value: null
+                    description: 问题列表
+                USER_RESPONSE:
+                    type: string
+                    required: true
+                    value: null
+                    description: 用户本轮对话输入内容
+                user_taste_prefer:
+                    type: string
+                    required: true
+                    value: null
+            option_type: static
+            options:
+                - name: ""
+                - name: ""
+            question: 您平时饮食上喜欢吃什么？
+        - id: "1062107"
+          type: llm
+          title: 确认画像摘要_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-LLM-v2.jpg
+          description: "调用大语言模型,使用变量和提示词生成回复"
+          version: "3"
+          position:
+            x: 1828.5915076973297
+            y: 465.5723148592677
+          parameters:
+            fcParamVar:
+                knowledgeFCParam: {}
+            llmParam:
+                - name: apiMode
+                  input:
+                    type: integer
+                    value: "0"
+                - name: temperature
+                  input:
+                    type: float
+                    value: "0.5"
+                - name: topP
+                  input:
+                    type: float
+                    value: "1"
+                - name: frequencyPenalty
+                  input:
+                    type: float
+                    value: "0"
+                - name: maxTokens
+                  input:
+                    type: integer
+                    value: "4096"
+                - name: spCurrentTime
+                  input:
+                    type: boolean
+                    value: false
+                - name: spAntiLeak
+                  input:
+                    type: boolean
+                    value: false
+                - name: thinkingType
+                  input:
+                    type: string
+                    value: enabled
+                - name: responseFormat
+                  input:
+                    type: integer
+                    value: "2"
+                - name: modelName
+                  input:
+                    type: string
+                    value: 豆包·2.0·mini·260428
+                - name: modelType
+                  input:
+                    type: integer
+                    value: "963313347"
+                - name: generationDiversity
+                  input:
+                    type: string
+                    value: balance
+                - name: parameters
+                  input:
+                    type: object
+                    properties:
+                        max_completion_tokens:
+                            type: integer
+                            value: "0"
+                        reasoning_effort:
+                            type: string
+                            value: medium
+                    value: null
+                - name: prompt
+                  input:
+                    type: string
+                    value: "用户采集到的全部信息如下：\n1.九种体质类型：{{input2}}\n5.口味偏好：{{input3}}\n6.饮食忌口：{{input4}}\n \n请按照规则生成本次用户的健康画像摘要。\n \n三、配套变量对应清单（核对一遍）\n \n1. {{input2}}：由7号Python代码节点输出\n5. {{input3}}:节点9收集的饮食偏好\n6.{{input4}}：节点9收集的忌口食物"
+                - name: enableChatHistory
+                  input:
+                    type: boolean
+                    value: false
+                - name: chatHistoryRound
+                  input:
+                    type: integer
+                    value: "3"
+                - name: systemPrompt
+                  input:
+                    type: string
+                    value: |
+                        你是康康食养AI 的健康画像总结助手，面向社区老年居民提供服务。
+
+                        【最高强制辨证铁律｜强制执行，优先级高于全部知识库与理论，不可突破】
+                        1. 症状权重：辨证时，「怕冷/畏寒 + 容易出汗（自汗）」组合的权重，必须高于「口干」和「大便干」。
+                        2. 禁止脑补症状：用户没有主动提及手脚心发热、五心烦热、夜间盗汗时，不得在任何分析、结论里自行添加这类症状。
+
+                        【核心任务】
+                        依据用户提交的体质问卷和健康资料，生成适合老年人阅读、简洁易懂的健康画像摘要。
+
+                        【允许参考的知识来源】
+                        - 中医经典食养理论（《黄帝内经》《金匮要略》，遵循 CMLM-ZhongJing/HuangDI 知识体系）
+                        - 24 节气岭南食养知识库：菜谱推荐仅可从此库检索
+                        - 现代营养学基础
+                        - 《中医体质分类与判定》
+
+                        【输出硬性规范】
+                        1. 语言：通俗易懂，避开晦涩专业术语，多用短句；语气亲切温和，是社区服务口吻，拒绝长篇大论。
+                        2. 内容顺序：依次整合：九种体质结果 → 饮食偏好与忌口 → 身体状态。
+                        3. 排版：控制为 2–3 小段
+                           - 第一段：总结体质类型与基础身体状况
+                           - 第二段：写明饮食禁忌、饮食建议要点
+                        4. 信息底线：严禁编造用户未给出的健康信息；问卷空缺、未填写内容统一标注【未提供】。
+                - name: stableSystemPrompt
+                  input:
+                    type: string
+                    value: ""
+                - name: canContinue
+                  input:
+                    type: boolean
+                    value: false
+                - name: loopPromptVersion
+                  input:
+                    type: string
+                    value: ""
+                - name: loopPromptName
+                  input:
+                    type: string
+                    value: ""
+                - name: loopPromptId
+                  input:
+                    type: string
+                    value: ""
+            node_inputs:
+                - name: input2
+                  input:
+                    value:
+                        path: constitution_type
+                        ref_node: "1358364"
+                - name: input3
+                  input:
+                    value:
+                        path: user_taste_prefer
+                        ref_node: "1041721"
+                - name: input4
+                  input:
+                    type: string
+                    value:
+                        path: user_dislike
+                        ref_node: "1024747"
+            node_outputs:
+                output:
+                    type: string
+                    value: null
+                reasoning_content:
+                    type: string
+                    value: null
+            settingOnError:
+                processType: 1
+                retryTimes: 0
+                switch: false
+                timeoutMs: 180000
+        - id: "1660216"
+          type: question
+          title: 问答_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 2290.0354381546813
+            y: 582.4807970565864
+          parameters:
+            answer_type: option
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: false
+            limit: 3
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 131072
+                modelName: 豆包·2.0·Code
+                modelType: 1.774430194e+09
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_inputs:
+                - name: output
+                  input:
+                    value:
+                        path: output
+                        ref_node: "1062107"
+            node_outputs:
+                QUESTION_DATA:
+                    type: object
+                    properties:
+                        options:
+                            type: list
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        value: null
+                                value: null
+                            value: null
+                        title:
+                            type: string
+                            value: null
+                    value: null
+                optionContent:
+                    type: string
+                    value: null
+                optionId:
+                    type: string
+                    value: null
+            option_type: static
+            options:
+                - name: 确认无误
+                - name: 重新填写
+            question: |-
+                请确认您的健康画像是否准确：
+                {{output}}
+                如果没问题，请点“确认无误”；如果有误，请点“重新填写”。
+        - id: "196176"
+          type: assign_variable
+          title: 变量赋值_1
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/Variable.jpg
+          description: "用于给支持写入的变量赋值，包括应用变量、用户变量"
+          position:
+            x: 2254.681775065311
+            y: 172.06888728334798
+          parameters:
+            node_inputs:
+                - name: taste_preference
+                  input:
+                    type: string
+                    value:
+                        path: taste_preference
+                        source: global_variable_user
+                - name: dietary_restrictions
+                  input:
+                    type: string
+                    value:
+                        path: dietary_restrictions
+                        source: global_variable_user
+                - name: constitution
+                  input:
+                    value:
+                        path: constitution_type
+                        ref_node: "1358364"
+            node_outputs:
+                isSuccess:
+                    type: boolean
+                    value: null
+            variableTypeMap:
+                constitution: global_variable_user
+                dietary_restrictions: global_variable_user
+                taste_preference: global_variable_user
+        - id: "159785"
+          type: break
+          title: 终止循环
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Break-v2.jpg
+          description: "用于立即终止当前所在的循环，跳出循环体"
+          position:
+            x: 2901.3352288984474
+            y: 172.0688872833481
+          parameters: {}
+        - id: "1024747"
+          type: question
+          title: 忌口
+          icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Direct-Question-v2.jpg
+          description: "支持中间向用户提问问题,支持预置选项提问和开放式问题提问两种方式"
+          position:
+            x: 1886.475642492821
+            y: 841.8951898136384
+          parameters:
+            answer_type: text
+            dynamic_option:
+                type: string
+                value:
+                    content:
+                        blockID: ""
+                        name: ""
+                        source: block-output
+                    rawMeta:
+                        type: 1
+                    type: ref
+            extra_output: true
+            limit: 5
+            llmParam:
+                frequencyPenalty: 0
+                generationDiversity: balance
+                maxTokens: 131072
+                modelName: 豆包·2.0·Code
+                modelType: 1.774430194e+09
+                parameters:
+                    max_completion_tokens: 0
+                    reasoning_effort: medium
+                responseFormat: 2
+                systemPrompt: ""
+                temperature: 0.5
+                thinkingType: enabled
+                topP: 1
+            node_outputs:
+                QUESTION_DATA:
+                    type: list
+                    items:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                value: null
+                            content_type:
+                                type: string
+                                value: null
+                        value: null
+                    required: true
+                    value: null
+                    description: 问题列表
+                USER_RESPONSE:
+                    type: string
+                    required: true
+                    value: null
+                    description: 用户本轮对话输入内容
+                user_dislike:
+                    type: string
+                    required: true
+                    value: null
+            option_type: static
+            options:
+                - name: ""
+                - name: ""
+            question: 有没有什么是你不能吃、或者吃了会不舒服的？
+      edges:
+        - source_node: "153470"
+          target_node: "1870085"
+          source_port: loop-function-inline-output
+        - source_node: "1870085"
+          target_node: "1781173"
+        - source_node: "1781173"
+          target_node: "1482353"
+        - source_node: "1482353"
+          target_node: "1522434"
+        - source_node: "1522434"
+          target_node: "1358364"
+        - source_node: "1358364"
+          target_node: "1041721"
+        - source_node: "1041721"
+          target_node: "1024747"
+        - source_node: "1024747"
+          target_node: "1062107"
+        - source_node: "1062107"
+          target_node: "1660216"
+        - source_node: "1660216"
+          target_node: "153470"
+          source_port: branch_1
+          target_port: loop-function-inline-input
+        - source_node: "1660216"
+          target_node: "153470"
+          source_port: default
+          target_port: loop-function-inline-input
+        - source_node: "1660216"
+          target_node: "196176"
+          source_port: branch_0
+        - source_node: "196176"
+          target_node: "159785"
+    - id: "147776"
+      type: output
+      title: 输出
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Output-v2.jpg
+      description: "节点从“消息”更名为“输出”，支持中间过程的消息输出，支持流式和非流式两种方式"
+      position:
+        x: 1915.611559991767
+        y: 494.24833583951573
+      parameters:
+        callTransferVoice: true
+        chatHistoryWriting: historyWrite
+        content:
+            type: string
+            value:
+                content: '{{output}}'
+                type: literal
+        node_inputs:
+            - name: output
+              input:
+                value:
+                    path: output
+                    ref_node: "182832"
+        streamingOutput: false
+    - id: "179766"
+      type: condition
+      title: 选择器
+      icon: https://lf3-static.bytednsdoc.com/obj/eden-cn/dvsmryvd_avi_dvsm/ljhwZthlaukjlkulzlp/icon/icon-Condition-v2.jpg
+      description: "连接多个下游分支，若设定的条件成立则仅运行对应的分支，若均不成立则只运行“否则”分支"
+      position:
+        x: 664.7627677768477
+        y: 122.1410839086448
+      parameters:
+        branches:
+            - condition:
+                conditions:
+                    - left:
+                        input:
+                            value:
+                                path: USER_INPUT
+                                ref_node: "100001"
+                      operator: 7
+                      right:
+                        input:
+                            type: string
+                            value: "怕冷"
+                logic: 2
+            - condition:
+                conditions:
+                    - left:
+                        input:
+                            value:
+                                path: USER_INPUT
+                                ref_node: "100001"
+                      operator: 7
+                      right:
+                        input:
+                            type: string
+                            value: "怕热"
+                logic: 2
+            - condition:
+                conditions:
+                    - left:
+                        input:
+                            value:
+                                path: USER_INPUT
+                                ref_node: "100001"
+                      operator: 7
+                      right:
+                        input:
+                            type: string
+                            value: "正常"
+                logic: 2
+            - condition:
+                conditions:
+                    - left:
+                        input:
+                            value:
+                                path: USER_INPUT
+                                ref_node: "100001"
+                      operator: 7
+                      right:
+                        input:
+                            type: string
+                            value: "冷热都怕"
+                logic: 2
+edges:
+    - source_node: "100001"
+      target_node: "179766"
+    - source_node: "106420"
+      target_node: "900001"
+    - source_node: "179766"
+      target_node: "182832"
+      source_port: "false"
+    - source_node: "182832"
+      target_node: "147776"
+    - source_node: "179766"
+      target_node: "106420"
+      source_port: "true"
+    - source_node: "179766"
+      target_node: "106420"
+      source_port: true_1
+    - source_node: "179766"
+      target_node: "106420"
+      source_port: true_2
+    - source_node: "179766"
+      target_node: "106420"
+      source_port: true_3
+    - source_node: "153470"
+      target_node: "106420"
+      source_port: loop-output
+    - source_node: "147776"
+      target_node: "153470"
