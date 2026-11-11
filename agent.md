@@ -2,6 +2,8 @@
 
 ## 项目范围
 
+本机工作区的应用源码位于 `RESET/`；同步到 GitHub 的仓库以 `RESET/` 的内容作为仓库根目录。因此以下路径在仓库中去掉 `RESET/` 前缀。
+
 - `RESET/windows-app/`：Python 标准库 + tkinter 桌面程序；`logic.py` 放体质、节气、推荐与 DeepSeek 回退逻辑，`app.py` 放界面。Windows 问卷现有 7 题，含可选年龄段；各阶段可重新开始问卷。
 - `RESET/android-app/`：Kotlin + Jetpack Compose 应用；最低 Android API 31，当前 `compileSdk`/`targetSdk` 为 36（Android 16）。Android 问卷已同步为 7 题，含年龄段单选；问卷、画像、推荐页均可重新开始，AI 文案会渲染常见 Markdown 格式。
 - `RESET/12/02_菜谱资料/三系菜谱总表_288道.csv` 是菜谱源数据。两个应用内的 `recipes.csv` 应与源文件保持一致（288 行、15 列）。
@@ -33,10 +35,10 @@ $env:ANDROID_HOME = 'E:\Android\Sdk'
 # 产物：app\build\outputs\apk\debug\app-debug.apk
 ```
 
-首次准备依赖时去掉 `--offline`；若 Wrapper 下载超时，可用本机 Gradle 8.13。项目仓库已设置阿里云 Maven 镜像及官方仓库后备。当前 Android 依赖已缓存，以上离线构建命令已验证。构建产物存在不代表已经完成设备安装或界面验收。
+首次准备依赖时去掉 `--offline`；若 Wrapper 下载超时，可用本机 Gradle 8.13。项目仓库已设置阿里云 Maven 镜像及官方仓库后备。当前 Android 依赖已缓存，以上离线构建命令已验证；debug APK 已在 Android 16 模拟器安装，并走通七题、画像、推荐和重新开始流程。
 
 ## 开发注意
 
-- 目前根目录不是 Git 仓库；提交、差异检查前先确认项目实际的版本管理位置。
+- 本机工作区根目录不是 Git 仓库；SSH 同步用的 Git 克隆位于 `.remote-sync/`。若在 GitHub 仓库的独立检出中工作，仓库根目录本身即为 Git 仓库。
 - 两端源码已改为从 `DEEPSEEK_API_KEY` 环境变量读取 DeepSeek 密钥；未设置时使用本地回退文案。Android 构建会把提供的密钥写入 APK，公开分发前应改用服务端代理。旧密钥曾出现在源码中，应轮换。
 - 健康内容仅作食养参考，不构成医疗建议；不要把本地推荐规则解释成诊断。

@@ -7,6 +7,8 @@
 
 构建时可通过 `DEEPSEEK_API_KEY` 环境变量提供 DeepSeek 密钥；未设置时应用使用本地回退文案。密钥会写入构建出的 APK，不应将含真实密钥的 APK 公开发布；正式分发宜改用服务端代理。
 
+年龄段选项为「60岁以下 / 60—69岁 / 70—79岁 / 80岁及以上」。第 1–5 题需选择后才能继续，第 6–7 题可以留空。年龄段进入画像与推荐文案，不改变本地体质计算和忌口筛选。
+
 ## 技术栈
 
 - Kotlin + Jetpack Compose（Material3）
@@ -40,6 +42,16 @@
 > 若 Android Studio 提示 Gradle Wrapper 缺失，可选择让 Studio 自动修复（File → Sync
 > Project with Gradle Files），或改用本地 Gradle 8.13。
 
+本机 PowerShell 离线构建：
+
+```powershell
+Set-Location 'F:\my\SuLinMei\RESET\android-app'
+$env:ANDROID_HOME = 'E:\Android\Sdk'
+.\gradlew.bat assembleDebug --offline --no-daemon --console=plain
+```
+
+APK 输出到 `app/build/outputs/apk/debug/app-debug.apk`。首次下载依赖时去掉 `--offline`；无密钥构建时将使用本地文案。
+
 ## 运行要求
 
 - 真机 / 模拟器系统版本：Android 12（API 31）及以上。
@@ -67,7 +79,7 @@ android-app/
             ├── data/  Recipe.kt / RecipeRepository.kt / SolarTerms.kt
             ├── logic/ ConstitutionCalculator.kt / RecommendationEngine.kt
             ├── network/ DeepSeekClient.kt
-            └── ui/    AppViewModel.kt / AppRoot.kt / theme/Theme.kt
+            └── ui/    AppViewModel.kt / AppRoot.kt / MarkdownText.kt / theme/Theme.kt
 ```
 
 ## 流程说明
@@ -75,4 +87,4 @@ android-app/
 启动问候 → 7 题问卷（题 1–4 为体质单选，题 5 为年龄段单选，题 6–7 为可留空文本框）→ 计算九种体质 →
 生成画像摘要（DeepSeek，失败回退本地模板）→ 确认 / 重新开始问卷 → 按当前节气（可手动切换
 24 节气任选）本地筛选 + 评分取前 3 道 → DeepSeek 生成推荐话术（失败回退为菜名+菜系+
-主料+做法），结尾必附「本推荐为食养参考，不构成医疗建议」。问卷、画像和推荐页均可重新开始；生成文案中的常见 Markdown 标记按格式显示。
+主料+做法）。生成推荐的提示词要求附上「本推荐为食养参考，不构成医疗建议」；本地回退文案也附有此说明。问卷、画像和推荐页均可重新开始，生成中也可使用；旧请求结果不会覆盖重试后的页面。画像和推荐支持标题、加粗、强调、项目符号、引用、行内代码和链接文字等基本 Markdown 排版。
