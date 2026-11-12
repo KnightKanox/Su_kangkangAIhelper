@@ -12,9 +12,9 @@ if errorlevel 1 goto fail
 
 call .venv\Scripts\activate.bat
 if errorlevel 1 goto fail
-python -m pip install --upgrade pyinstaller
+python -m pip install --upgrade pyinstaller pygame-ce==2.5.8
 if errorlevel 1 goto fail
-python -m PyInstaller --noconfirm --clean --onefile --windowed --name KangKangShiYangAI --add-data "data\recipes.csv:data" app.py
+python -m PyInstaller --noconfirm --clean --onefile --windowed --name KangKangShiYangAI --icon "assets\app.ico" --add-data "assets;assets" --add-data "data\recipes.csv;data" app.py
 if errorlevel 1 goto fail
 
 echo Build succeeded: dist\KangKangShiYangAI.exe

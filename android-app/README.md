@@ -9,6 +9,10 @@
 
 年龄段选项为「60岁以下 / 60—69岁 / 70—79岁 / 80岁及以上」。第 1–5 题需选择后才能继续，第 6–7 题可以留空。年龄段进入画像与推荐文案，不改变本地体质计算和忌口筛选。
 
+「我的」页可修改饮食偏好与忌口并刷新摘要及推荐；食养页的「换一组菜」显示同条件下后续候选。含忌口词的主料会从候选中排除。食养页使用四季和菜系插画，空内容、失败与加载状态使用独立插画。
+
+内置「拂晓车站」背景音乐使用 Android `MediaPlayer` 循环播放；顶部小按钮切换静音，应用进入后台时暂停，返回前台后继续。原交付文件虽以 `.mp3` 命名，实际含 AAC 音轨；现直接保留音轨并重新封装为 `app/src/main/res/raw/fuxiao_station.m4a`，避免二次有损转码。当前版本为 1.4.0（`versionCode` 5）。
+
 ## 技术栈
 
 - Kotlin + Jetpack Compose（Material3）
@@ -74,17 +78,20 @@ android-app/
         ├── AndroidManifest.xml
         ├── assets/recipes.csv
         ├── res/values/{strings.xml,themes.xml}
+        ├── res/drawable-nodpi/{season_*,cuisine_*,state_*.png}
+        ├── res/raw/fuxiao_station.m4a
         └── java/com/kangkang/shiyangai/
             ├── MainActivity.kt
             ├── data/  Recipe.kt / RecipeRepository.kt / SolarTerms.kt
             ├── logic/ ConstitutionCalculator.kt / RecommendationEngine.kt
             ├── network/ DeepSeekClient.kt
-            └── ui/    AppViewModel.kt / AppRoot.kt / MarkdownText.kt / theme/Theme.kt
+            └── ui/    AppViewModel.kt / AppRoot.kt / Components.kt / HomeScreen.kt /
+                       FoodScreen.kt / ProfileScreen.kt / QuestionnaireScreens.kt /
+                       MarkdownText.kt / theme/Theme.kt
 ```
 
 ## 流程说明
 
-启动问候 → 7 题问卷（题 1–4 为体质单选，题 5 为年龄段单选，题 6–7 为可留空文本框）→ 计算九种体质 →
-生成画像摘要（DeepSeek，失败回退本地模板）→ 确认 / 重新开始问卷 → 按当前节气（可手动切换
-24 节气任选）本地筛选 + 评分取前 3 道 → DeepSeek 生成推荐话术（失败回退为菜名+菜系+
-主料+做法）。生成推荐的提示词要求附上「本推荐为食养参考，不构成医疗建议」；本地回退文案也附有此说明。问卷、画像和推荐页均可重新开始，生成中也可使用；旧请求结果不会覆盖重试后的页面。画像和推荐支持标题、加粗、强调、项目符号、引用、行内代码和链接文字等基本 Markdown 排版。
+启动进入首页（底部三 Tab：首页 / 食养 / 我的，问候语完整展示在首页卡片）→ 7 题问卷（题 1–4 为体质单选，题 5 为年龄段单选，题 6–7 为可留空文本框）→ 计算九种体质 → 生成画像摘要（DeepSeek，失败回退本地模板）→ 确认 / 重新填写 → 进入「食养」按当前节气（可手动切换 24 节气）本地筛选 + 评分取前 3 道 → 以 3 张结构化菜谱卡展示（菜名、菜系、主料、做法摘要、推荐理由、忌口提示、「食养参考」标签）。
+
+卡片字段全部来自 `assets/recipes.csv`；DeepSeek 仅生成每道菜的一句推荐理由（按菜名回填），未配置密钥、调用失败或解析失败时使用本地理由。免责声明「本推荐为食养参考，不构成医疗建议」固定展示。未完成问卷、筛选无结果与加载失败均有独立空态。Tab 切换不清空答案与推荐；问卷、画像、食养空态与我的页均可重新填写，生成中重填或切换节气时旧结果不会覆盖新页面。画像摘要支持标题、加粗、强调、项目符号、引用、行内代码和链接文字等基本 Markdown 排版。

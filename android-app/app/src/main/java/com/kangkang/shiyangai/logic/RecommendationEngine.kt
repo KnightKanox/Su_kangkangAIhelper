@@ -12,26 +12,31 @@ object RecommendationEngine {
         recipes: List<Recipe>,
         term: String,
         constitution: String,
-        taboo: String
+        taboo: String,
+        offset: Int = 0
     ): List<Recipe> {
-        val candidates = recipes.filter { it.solarTerm == term }
+        val tokens = splitTaboo(taboo)
+        val eligible = recipes.filter { recipe ->
+            tokens.none { token -> recipe.ingredients.contains(token, ignoreCase = true) }
+        }
+        val candidates = eligible.filter { it.solarTerm == term }
             .distinctBy { it.totalIndex }
             .toMutableList()
         val seen = candidates.map { it.totalIndex }.toMutableSet()
 
         var prev = SolarTerms.previous(term)
         var next = SolarTerms.next(term)
-        while (candidates.size < 3) {
+        while (candidates.size < offset + 3) {
             var addedAny = false
-            for (r in recipes.filter { it.solarTerm == prev }) {
-                if (candidates.size >= 3) break
+            for (r in eligible.filter { it.solarTerm == prev }) {
+                if (candidates.size >= offset + 3) break
                 if (seen.add(r.totalIndex)) {
                     candidates.add(r)
                     addedAny = true
                 }
             }
-            for (r in recipes.filter { it.solarTerm == next }) {
-                if (candidates.size >= 3) break
+            for (r in eligible.filter { it.solarTerm == next }) {
+                if (candidates.size >= offset + 3) break
                 if (seen.add(r.totalIndex)) {
                     candidates.add(r)
                     addedAny = true
@@ -42,10 +47,10 @@ object RecommendationEngine {
             next = SolarTerms.next(next)
         }
 
-        val tokens = splitTaboo(taboo)
         return candidates
             .map { it to score(it, constitution, tokens) }
             .sortedByDescending { it.second }
+            .drop(offset)
             .take(3)
             .map { it.first }
     }

@@ -234,7 +234,7 @@ def score_recipe(recipe, constitution, taboo=""):
     return score
 
 
-def recommend(term, constitution, taboo="", preference="", limit=3):
+def recommend(term, constitution, taboo="", preference="", limit=3, offset=0):
     """按当前节气 + 体质 + 忌口筛选并评分，返回前 limit 道（不足则全部）。
 
     候选不足时按节气循环顺序，依次取上一个、下一个节气补齐（去重）。
@@ -249,6 +249,9 @@ def recommend(term, constitution, taboo="", preference="", limit=3):
 
     def add(term_name):
         for r in by_term.get(term_name, []):
+            if any(token.lower() in (r.get("主料", "") or "").lower()
+                   for token in _split_taboo(taboo)):
+                continue
             key = r.get("菜名") or r.get("总序号")
             if key not in seen:
                 seen.add(key)
@@ -260,10 +263,10 @@ def recommend(term, constitution, taboo="", preference="", limit=3):
         idx = SOLAR_TERM_NAMES.index(term)
         n = len(SOLAR_TERM_NAMES)
         step = 1
-        while len(candidates) < limit and step < n:
+        while len(candidates) < offset + limit and step < n:
             prev = SOLAR_TERM_NAMES[(idx - step) % n]
             add(prev)
-            if len(candidates) >= limit:
+            if len(candidates) >= offset + limit:
                 break
             nxt = SOLAR_TERM_NAMES[(idx + step) % n]
             add(nxt)
@@ -273,7 +276,7 @@ def recommend(term, constitution, taboo="", preference="", limit=3):
         r["_score"] = score_recipe(r, constitution, taboo)
 
     candidates.sort(key=lambda r: (-r["_score"], int(r.get("总序号") or 0)))
-    result = candidates[:limit]
+    result = candidates[offset:offset + limit]
     for r in result:
         r.pop("_score", None)
     return result
@@ -426,3 +429,82 @@ def _local_recommendation(recipes):
         lines.append("")
     lines.append(DISCLAIMER)
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------- 推荐理由
+# 结构化推荐以本地 CSV 为事实来源，模型只负责「每道菜一句理由」。
+_REASON_SYSTEM = (
+    "你是康康食养AI的菜谱推荐理由助手，面向社区老年居民，仅普通话。"
+    "结合节气、用户体质和给定菜谱的食养特点，为每道菜写一句推荐理由。"
+    "严格按格式输出 3 行：序号. 菜名｜理由；理由不超过40字；"
+    "结合节气、体质和菜谱食养特点；不得编造未提供的食材、功效或疾病信息。"
+)
+
+_REASON_LINE = re.compile(r"^\s*\d+[.、．]\s*(.+?)\s*[｜|]\s*(.+?)\s*$")
+_REASON_MARKUP = re.compile(r"[*#`]")
+
+
+def _first_feature_sentence(text, limit=24):
+    """取「食养特点」第一个句号之前的内容，并截断到 limit 字。"""
+    s = (text or "").strip()
+    if not s:
+        return ""
+    return s.split("。")[0].strip()[:limit]
+
+
+def local_reason(term, constitution, recipe):
+    """本地确定性推荐理由，AI 不可用或未匹配时使用。"""
+    feature = _first_feature_sentence(recipe.get("食养特点", ""))
+    term = (term or "").strip()
+    if constitution:
+        if feature:
+            return f"{term}时令菜，{feature}，可作为{constitution}体质的日常食养参考。"
+        return f"{term}时令菜，可作为{constitution}体质的日常食养参考。"
+    if feature:
+        return f"{term}时令菜，{feature}，可作为日常食养参考。"
+    return f"{term}时令菜，可作为日常食养参考。"
+
+
+def parse_reasons(text):
+    """解析「序号. 菜名｜理由」格式，返回 {菜名: 理由}。"""
+    reasons = {}
+    for raw_line in str(text or "").replace("\r\n", "\n").split("\n"):
+        line = _REASON_MARKUP.sub("", raw_line)
+        match = _REASON_LINE.match(line)
+        if not match:
+            continue
+        name = match.group(1).strip()
+        reason = match.group(2).strip()
+        if name and reason:
+            reasons[name] = reason[:40]
+    return reasons
+
+
+def generate_reasons(term, constitution, taboo="", preference="",
+                     recipes=(), age_group=""):
+    """一次 DeepSeek 调用，仅为给定菜谱生成推荐理由。
+
+    返回 {菜名: 理由}；未配置密钥、调用失败或解析失败时返回 {}。
+    """
+    if not recipes:
+        return {}
+
+    user_lines = [
+        f"当前节气：{term}",
+        f"用户体质：{constitution or '未提供'}",
+        f"年龄段：{_display_or(age_group, '未提供')}",
+        f"忌口食物：{_display_or(taboo, '未提供')}",
+        f"饮食偏好：{_display_or(preference, '未提供')}",
+        "候选菜谱：",
+    ]
+    for i, r in enumerate(recipes, 1):
+        user_lines.append(
+            f"{i}. 菜名：{r.get('菜名', '')}；菜系：{r.get('菜系', '')}；"
+            f"主料：{r.get('主料', '')}；食养特点：{r.get('食养特点', '')}；"
+            f"体质宜忌：{r.get('体质宜忌', '')}"
+        )
+
+    text, ok = deepseek_chat(_REASON_SYSTEM, "\n".join(user_lines))
+    if not ok or not text:
+        return {}
+    return parse_reasons(text)

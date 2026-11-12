@@ -12,8 +12,8 @@ android {
         applicationId = "com.kangkang.shiyangai"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "1.4.0"
         val deepSeekKey = System.getenv("DEEPSEEK_API_KEY") ?: ""
         buildConfigField("String", "DEEPSEEK_API_KEY", "\"${deepSeekKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }

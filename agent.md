@@ -4,7 +4,7 @@
 
 本机工作区的应用源码位于 `RESET/`；同步到 GitHub 的仓库以 `RESET/` 的内容作为仓库根目录。因此以下路径在仓库中去掉 `RESET/` 前缀。
 
-- `RESET/windows-app/`：Python 标准库 + tkinter 桌面程序；`logic.py` 放体质、节气、推荐与 DeepSeek 回退逻辑，`app.py` 放界面。Windows 问卷现有 7 题，含可选年龄段；各阶段可重新开始问卷。
+- `RESET/windows-app/`：Python + tkinter 桌面程序，背景音乐使用 `pygame-ce`；`logic.py` 放体质、节气、推荐与 DeepSeek 回退逻辑，`app.py` 放界面。Windows 问卷现有 7 题，含可选年龄段；各阶段可重新开始问卷。
 - `RESET/android-app/`：Kotlin + Jetpack Compose 应用；最低 Android API 31，当前 `compileSdk`/`targetSdk` 为 36（Android 16）。Android 问卷已同步为 7 题，含年龄段单选；问卷、画像、推荐页均可重新开始，AI 文案会渲染常见 Markdown 格式。
 - `RESET/12/02_菜谱资料/三系菜谱总表_288道.csv` 是菜谱源数据。两个应用内的 `recipes.csv` 应与源文件保持一致（288 行、15 列）。
 - `RESET/.trae/specs/build-kangkang-health-apps/spec.md` 是功能规格；修改体质规则、节气表或推荐规则时，核对两个平台的一致性。
@@ -21,8 +21,8 @@ Windows：
 ```powershell
 Set-Location 'F:\my\SuLinMei\RESET\windows-app'
 py -3 -m venv .venv
-& '.\.venv\Scripts\python.exe' -m pip install pyinstaller
-& '.\.venv\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onefile --windowed --name KangKangShiYangAI --add-data 'data\recipes.csv:data' app.py
+& '.\.venv\Scripts\python.exe' -m pip install pyinstaller pygame-ce==2.5.8
+& '.\.venv\Scripts\python.exe' -m PyInstaller --noconfirm --clean --onefile --windowed --name KangKangShiYangAI --add-data 'assets;assets' --add-data 'data\recipes.csv;data' app.py
 # 产物：dist\KangKangShiYangAI.exe
 ```
 
